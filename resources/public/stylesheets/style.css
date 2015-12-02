@@ -1,0 +1,100 @@
+body {
+    background-color: lightgray;
+}
+.month {
+    margin-bottom: 50px;
+}
+
+.after-month {
+    clear:both;
+}
+
+.week {
+    width: 95%;
+    margin: 0 auto;
+    clear: both;
+}
+
+.week:last-child .day {
+    border-bottom-style: solid;
+}
+
+.day {
+    width: 14%;
+    height: 14vw;
+    display: inline-block;
+    border-style: solid none none solid;
+    border-width: 2px;
+    border-color: black;
+    position: relative;
+    float: left;
+    text-align: center;
+}
+
+.day:last-child {
+    border-right-style: solid;
+}
+
+.day-no {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+}
+
+.day-name {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin: 0;
+    transform: translate(-50%, -50%)
+}
+
+.month-header {
+    text-align: center;
+    font-size: 24pt;
+    margin-left: 5px;
+    margin-right: 5px;
+    padding-bottom: 5px;
+}
+
+.change-month {
+    background-color: transparent;
+    border: none;
+    padding-left: 3px;
+    padding-right: 3px;
+    margin-bottom: 15px;
+}
+
+.change-month:focus {
+    outline: none;
+}
+
+.month-year {
+    display: inline-block;
+    width: 210px;
+}
+
+
+.change-month i {
+    vertical-align: 2px;
+}
+
+.white {
+    background-color: white;
+}
+
+.red {
+    background-color: red;
+}
+
+.blue {
+    background-color: blue;
+}
+
+.green {
+    background-color: green;
+}
+
+.yellow {
+    background-color: yellow;
+}

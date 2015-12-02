@@ -1,0 +1,12 @@
+
+# IntelliJ project files
+.idea
+*.iml
+out
+gen
+resources/public/js/*
+.lein-repl-history
+target/*
+figwheel_server.log
+lib/clojure-1.7.0.jar
+
