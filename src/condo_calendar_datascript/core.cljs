@@ -1,4 +1,4 @@
-(ns condo-calendar.core
+(ns condo-calendar-datascript.core
   (:require [cljs-time.core :as t]
             [cljs-time.periodic :as p]
             [cljs-time.format :as cf]
@@ -7,7 +7,8 @@
             [clojure.test.check.properties :as prop]
             [om.next :as om :refer-macros [defui]]
             [om.dom :as dom]
-            [goog.dom :as gdom]))
+            [goog.dom :as gdom]
+            [datascript.core :as d]))
 
 (enable-console-print!)
 
@@ -63,6 +64,71 @@
 ; 23  24  25  26  27  28  29
 ; 30  31
 ;
+
+(def schema {:days/by-date {
+                             :db/cardinality :db.cardinality/one
+                             :db/doc         "string represnetation of date, format yyyymmdd"
+                             }
+             :days/person {
+               :db/cardinality :db.cardinality/one
+               :db/valueType :db.type/ref
+               :db/doc         "Refenernce to the person holding a day"
+               }
+              :person/name {
+               :db/cardinality :db.cardinality/one
+               :db/doc         "A person's name"
+               }
+              :person/color {
+               :db/cardinality :db.cardinality/one
+               :db/doc         "The color to use to display a day held by a person"
+               }
+              :month/month-id {
+               :db/cardinality :db.cardinality/one
+               :db/doc         "A person's name"
+               }
+              :month/weeks {
+               :db/cardinality :db.cardinality/one
+               :db/doc         "A month of weeks"
+               }
+              :week/days {
+               :db/valueType   :db.type/ref
+               :db/cardinality :db.cardinality/one
+               :db/doc         "A week of days"
+               }
+              :day/date {
+               :db/cardinality :db.cardinality/one
+               :db/doc         "a day's date"
+               }
+              :day/date-key {
+               :db/cardinality :db.cardinality/one
+               :db/doc         "A string representing a date - formay yyyymmdd"
+               }
+             :current-user {
+                :db/cardinality :db.cardinality/one
+                :db/valueType :db.type/ref
+                            }
+              }
+  )
+
+(d/transact! conn (let [today (t/today)
+                        month (t/month today)
+                        year (t/year today)]
+                    [ {:db/id -1 :person/name "Jake" :person/color "green"}
+                   {:db/id -2 :person/color "red" :person/name "Judy" }
+                   {:db/id -3 :person/color "blue" :person/name "John" }
+                   {:db/id -4 :person/color "yellow" :person/name "Susan"}
+                   {:db/id -5 :current-user 1}
+                   {:db/id -6 :month/month-id (t/date-time year month 1)}
+                   (:db/id -7 :month/weeks (six-weeks-containing-month year month))]))
+
+; get name, color, and id for current user
+;(d/q '[:find ?cu ?n ?c :where [_ :current-user ?cu] [?cu :person/name ?n] [?cu :person/color ?c]] @conn) ; get name and color for current user
+
+; get name, color, date, and id for a date assignment
+;(d/q '[:find ?i ?d ?n ?c :where [?d :days/by-date "20151217"] [?d :person/by-id ?i] [?i :person/name ?n] [?i :person/color ?c]] @conn)
+
+; transact in a new date assignment
+;(d/transact! conn [{:db/id -1 :person/by-id 3 :days/by-date "20151217"}])
 
 (defn sunday-of-first-week-of-month [year month]
   "return the sunday starting the week containing the first of the month"
@@ -139,42 +205,62 @@
 
 (defmulti mutate om/dispatch)
 
+;(defmethod mutate 'day/change-state
+;  [{:keys [state]} _ {:keys [date] :as params}]
+;  (let [st @state]
+;    (if-let [day-assignee (get-in st [:days/by-date (str date)])]
+;      (do
+;          (if (= (second day-assignee) (:current-user st))  ; the date is assigned
+;            {:value {:days/by-date date}                    ; it is assigned to the current user - so release
+;             :action
+;                    (fn []
+;                      (swap! state release-day (str date)))}
+;            {:value {:error "Cannot release someone else's day"}})) ; the date is assigned to someone else - user error
+;      (do  {:value {:days/by-date date} ; the date is not assigned - so assign
+;                                              :action
+;                                                     (fn []
+;                                                       (swap! state add-assignment-to-calendar (str date) (:current-user st)))}))))
 (defmethod mutate 'day/change-state
   [{:keys [state]} _ {:keys [date] :as params}]
-  (let [st @state]
-    (if-let [day-assignee (get-in st [:days/by-date (str date)])]
-      (do
-          (if (= (second day-assignee) (:current-user st))  ; the date is assigned
-            {:value {:days/by-date date}                    ; it is assigned to the current user - so release
-             :action
-                    (fn []
-                      (swap! state release-day (str date)))}
-            {:value {:error "Cannot release someone else's day"}})) ; the date is assigned to someone else - user error
-      (do  {:value {:days/by-date date} ; the date is not assigned - so assign
-                                              :action
-                                                     (fn []
-                                                       (swap! state add-assignment-to-calendar (str date) (:current-user st)))}))))
+  (let [[id _ _] (first (d/q '[:find ?cu ?n ?c :where [_ :current-user ?cu] [?cu :person/name ?n] [?cu :person/color ?c]] @conn))])
+  (d/transact! conn [{:db/id -1 :person/by-id id :days/by-date (str date)}]))
+
+;(defmethod mutate 'month/next
+;  [{:keys [state]} _ _]
+;  (let [st @state
+;        new-month (next-month (:month/month-id st))
+;        month (t/month new-month)
+;        year (t/year new-month)]
+;    {:value  {:month/month-id (date-key new-month)}
+;     :action (fn []
+;               (swap! state assoc :month/month-id new-month :month (six-weeks-containing-month year month)))}))
 
 (defmethod mutate 'month/next
   [{:keys [state]} _ _]
-  (let [st @state
-        new-month (next-month (:month/month-id st))
-        month (t/month new-month)
-        year (t/year new-month)]
-    {:value  {:month/month-id (date-key new-month)}
-     :action (fn []
-               (swap! state assoc :month/month-id new-month :month (six-weeks-containing-month year month)))}))
+  (let [current-month (first (h/q '[:find ?m :where [?m :month/month-id _]]))
+    new-month (next-month current-month)
+    month (t/month new-month)
+    year (t/year new-month)]
+    (d/transact! conn [{:month/month-id new-month :month (siv-weeks-containing-month year month)}])))
 
-(defmethod mutate 'month/previous
+
+;(defmethod mutate 'month/previous
+;  [{:keys [state]} _ _]
+;  (let [st @state
+;        new-month (last-month (:month/month-id st))
+;        month (t/month new-month)
+;        year (t/year new-month)]
+;    {:value  {:month/month-id (date-key new-month)}
+;     :action (fn []
+;               (swap! state assoc :month/month-id new-month :month (six-weeks-containing-month year month)))}))
+
+(defmethod mutate 'month/next
   [{:keys [state]} _ _]
-  (let [st @state
-        new-month (last-month (:month/month-id st))
+  (let [current-month (first (h/q '[:find ?m :where [?m :month/month-id _]]))
+        new-month (last-month current-month)
         month (t/month new-month)
         year (t/year new-month)]
-    {:value  {:month/month-id (date-key new-month)}
-     :action (fn []
-               (swap! state assoc :month/month-id new-month :month (six-weeks-containing-month year month)))}))
-
+    (d/transact! conn [{:month/month-id new-month :month (siv-weeks-containing-month year month)}])))
 
 (def reconciler
   (om/reconciler

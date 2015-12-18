@@ -8,11 +8,10 @@
    [{:id "dev"
      :figwheel true
      :source-paths ["src"]
-     :compiler {:main 'condo-calendar.core
+     :compiler {:main 'condo-calendar-datascript.core
                 :asset-path "js"
                 :output-to "resources/public/js/main.js"
                 :output-dir "resources/public/js"
-                :optimizations: :none
                 :source-map true
                 :verbose true}}]})
 

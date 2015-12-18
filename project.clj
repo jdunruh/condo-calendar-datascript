@@ -1,4 +1,4 @@
-(defproject condo-calendar "0.1.0-SNAPSHOT"
+(defproject condo-calendar-datascript "0.1.0-SNAPSHOT"
   :description "Application for scheduling the coop condo"
   :url "http://example.com/FIXME"
   :license {:name "Compright 2015, John Unruh, all righs reserved"
@@ -8,4 +8,5 @@
                  [org.clojure/test.check "0.8.2"]
                  [org.omcljs/om "1.0.0-alpha22"]
                  [figwheel-sidecar "0.4.0" :scope "provided"]
-                 [com.andrewmcveigh/cljs-time "0.3.14"]])
+                 [com.andrewmcveigh/cljs-time "0.3.14"]
+                 [datascript "0.13.3"]])
