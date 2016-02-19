@@ -67,6 +67,7 @@
 
 (def schema {:days/by-date   {
                               :db/cardinality :db.cardinality/one
+                              :db/unique      :db.unique/identity
                               :db/doc         "string represnetation of date, format yyyymmdd"
                               }
             :person/by-id   {
@@ -185,7 +186,7 @@
 (defmethod mutate 'day/change-state
   [{:keys [state]} _ {:keys [date] :as params}]
   (let [current-user (first (first (d/q '[:find ?cu :where [_ :current-user ?cu]] @conn)))
-        id (first (first (d/q '[:find ?p :in $ ?d :where [?day :person/by-id ?p] [?day :day/by-date ?d]] @conn (str date))))]
+        id (first (first (d/q '[:find ?p :in $ ?d :where [?day :person/by-id ?p] [?day :days/by-date ?d]] @conn (str date))))]
     (if id
       {:value  {:days/by-date date}
        :action (fn []
