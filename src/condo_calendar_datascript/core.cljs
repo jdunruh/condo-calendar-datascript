@@ -91,19 +91,6 @@
                               :db/cardinality :db.cardinality/one
                               :db/doc         "A month of weeks"
                               }
-             :week/days      {
-                              :db/valueType   :db.type/ref
-                              :db/cardinality :db.cardinality/one
-                              :db/doc         "A week of days"
-                              }
-             :day/date       {
-                              :db/cardinality :db.cardinality/one
-                              :db/doc         "a day's date"
-                              }
-             :day/date-key   {
-                              :db/cardinality :db.cardinality/one
-                              :db/doc         "A string representing a date - formay yyyymmdd"
-                              }
              :current-user   {
                               :db/cardinality :db.cardinality/one
                               :db/valueType   :db.type/ref
